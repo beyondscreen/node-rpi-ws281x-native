@@ -1,6 +1,6 @@
 var ws281x = require('../lib/ws281x-native');
 
-var NUM_LEDS = process.argv[2] || 10,
+var NUM_LEDS = parseInt(process.argv[2], 10) || 10,
     pixelData = new Uint32Array(NUM_LEDS);
 
 ws281x.init(NUM_LEDS);
