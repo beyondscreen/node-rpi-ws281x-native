@@ -1,6 +1,6 @@
 {
   "name": "rpi-ws281x-native",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "(raspberry-pi *only*) native bindings to control a strip of WS281x-LEDs with node.js",
   "keywords": [
     "raspberry",
