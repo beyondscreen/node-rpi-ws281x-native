@@ -25,26 +25,29 @@ if you prefer installing from source:
 
 this module exports only three functions to send data to the LED-String.
 
-```
+```javascript
 exports = {
     /**
      * configures PWM and DMA for sending data to the LEDs
      *
      * @param numLeds {Number}  number of LEDs to be controlled
      * @param [options] {Object}  (acutally only tested with default-values)
-     *                            intialization-options for the library (PWM frequency, DMA channel, GPIO)
+     *                            intialization-options for the library
+     *                            (PWM frequency, DMA channel, GPIO)
      */
     init: function(numLeds, options) {},
 
     /**
      * send data to the LED-strip.
      *
-     * @param data {Uint32Array}  the pixel-data, 24bit per pixel in RGB-format (0xff0000 is red).
+     * @param data {Uint32Array}  the pixel-data, 24bit per pixel in
+     *                            RGB-format (0xff0000 is red).
      */
     render: function(data) {},
 
     /**
-     * clears all LEDs, resets the PWM and DMA-parts and deallocates all internal structures.
+     * clears all LEDs, resets the PWM and DMA-parts and deallocates
+     * all internal structures.
      */
     reset: function() {}
 };
