@@ -11,7 +11,7 @@ ws2811/ws2812 LEDs. **will only run on the Raspberry Pi.**
 
 this module is available via npm:
 
-    npm install rpi-ws2812-native
+    npm install rpi-ws281x-native
 
 if you prefer installing from source:
 
