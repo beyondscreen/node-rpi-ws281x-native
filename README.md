@@ -33,7 +33,7 @@ exports = {
      * @param numLeds {Number}  number of LEDs to be controlled
      * @param [options] {Object}  (acutally only tested with default-values)
      *                            intialization-options for the library
-     *                            (PWM frequency, DMA channel, GPIO)
+     *                            (PWM frequency, DMA channel, GPIO, Brightness)
      */
     init: function(numLeds, options) {},
 

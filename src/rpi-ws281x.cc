@@ -65,10 +65,12 @@ Handle<Value> Init(const Arguments& args) {
   channel0data.gpionum = DEFAULT_GPIO_PIN;
   channel0data.invert = 0;
   channel0data.count = 0;
+  channel0data.brightness = 255;
 
   channel1data.gpionum = 0;
   channel1data.invert = 0;
   channel1data.count = 0;
+  channel1data.brightness = 255;
 
 
   ledstring.channel[0] = channel0data;
@@ -95,7 +97,8 @@ Handle<Value> Init(const Arguments& args) {
         symFreq = String::NewSymbol("frequency"),
         symDmaNum = String::NewSymbol("dmaNum"),
         symGpioPin = String::NewSymbol("gpioPin"),
-        symInvert = String::NewSymbol("invert");
+        symInvert = String::NewSymbol("invert"),
+        symBrightness = String::NewSymbol("brightness");
 
     if(config->HasOwnProperty(symFreq)) {
       ledstring.freq = config->Get(symFreq)->Uint32Value();
@@ -111,6 +114,10 @@ Handle<Value> Init(const Arguments& args) {
 
     if(config->HasOwnProperty(symInvert)) {
       ledstring.channel[0].invert = config->Get(symInvert)->Int32Value();
+    }
+
+    if(config->HasOwnProperty(symBrightness)) {
+      ledstring.channel[0].brightness = config->Get(symBrightness)->Int32Value();
     }
   }
 
