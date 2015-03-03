@@ -6,7 +6,8 @@
         {
           'target_name': 'rpi_ws281x',
           'sources': ['./src/rpi-ws281x.cc'],
-          'dependencies': ['libws2811']
+          'dependencies': ['libws2811'],
+          'include_dirs': ['<!(node -e "require(\'nan\')")']
         },
 
         {

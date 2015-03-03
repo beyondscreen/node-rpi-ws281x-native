@@ -1,5 +1,6 @@
 #include <node.h>
 #include <v8.h>
+#include <nan.h>
 
 #include <stdio.h>
 #include <stdint.h>
@@ -17,7 +18,6 @@ using namespace v8;
 #define DEFAULT_GPIO_PIN        18
 #define DEFAULT_DMANUM          5
 
-
 ws2811_t ledstring;
 ws2811_channel_t
   channel0data,
@@ -28,18 +28,16 @@ ws2811_channel_t
  *   if data is longer than the number of leds, remaining data will be ignored.
  *   Otherwise, data
  */
-Handle<Value> Render(const Arguments& args) {
-  HandleScope scope;
+NAN_METHOD(Render) {
+  NanScope();
 
   if(args.Length() != 1) {
-    ThrowException(Exception::TypeError(String::New("render(): missing argument.")));
-    return scope.Close(Undefined());
+    return NanThrowTypeError("render(): missing argument.");
   }
 
   Local<Object> obj = args[0]->ToObject();
   if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedIntArray) {
-    ThrowException(Exception::TypeError(String::New("render(): expected argument to be an Uint32Array.")));
-    return scope.Close(Undefined());
+    return NanThrowTypeError("render(): expected argument to be an Uint32Array.");
   }
 
   int len = obj->GetIndexedPropertiesExternalArrayDataLength();
@@ -50,14 +48,14 @@ Handle<Value> Render(const Arguments& args) {
   ws2811_wait(&ledstring);
   ws2811_render(&ledstring);
 
-  return scope.Close(Undefined());
+  NanReturnValue(NanUndefined());
 }
 
 /**
  * exports.init(Number ledCount [, Object config]) - setup the configuration and initialize the library.
  */
-Handle<Value> Init(const Arguments& args) {
-  HandleScope scope;
+NAN_METHOD(Init) {
+  NanScope();
 
   ledstring.freq    = DEFAULT_TARGET_FREQ;
   ledstring.dmanum  = DEFAULT_DMANUM;
@@ -72,21 +70,18 @@ Handle<Value> Init(const Arguments& args) {
   channel1data.count = 0;
   channel1data.brightness = 255;
 
-
   ledstring.channel[0] = channel0data;
   ledstring.channel[1] = channel1data;
 
-
   if(args.Length() < 1) {
-    ThrowException(Exception::TypeError(String::New("init(): expected at least 1 argument")));
-    return scope.Close(Undefined());
+    return NanThrowTypeError("init(): expected at least 1 argument");
   }
 
   // first argument is a number
   if(!args[0]->IsNumber()) {
-    ThrowException(Exception::TypeError(String::New("init(): argument 0 is not a number")));
-    return scope.Close(Undefined());
+    return NanThrowTypeError("init(): argument 0 is not a number");
   }
+
   ledstring.channel[0].count = args[0]->Int32Value();
 
   // second (optional) an Object
@@ -94,11 +89,11 @@ Handle<Value> Init(const Arguments& args) {
     Local<Object> config = args[1]->ToObject();
 
     Local<String>
-        symFreq = String::NewSymbol("frequency"),
-        symDmaNum = String::NewSymbol("dmaNum"),
-        symGpioPin = String::NewSymbol("gpioPin"),
-        symInvert = String::NewSymbol("invert"),
-        symBrightness = String::NewSymbol("brightness");
+        symFreq = NanNew<String>("frequency"),
+        symDmaNum = NanNew<String>("dmaNum"),
+        symGpioPin = NanNew<String>("gpioPin"),
+        symInvert = NanNew<String>("invert"),
+        symBrightness = NanNew<String>("brightness");
 
     if(config->HasOwnProperty(symFreq)) {
       ledstring.freq = config->Get(symFreq)->Uint32Value();
@@ -125,18 +120,18 @@ Handle<Value> Init(const Arguments& args) {
   int err = ws2811_init(&ledstring);
 
   if(err) {
-      ThrowException(Exception::TypeError(String::New("init(): initialization failed. sorry – no idea why.")));
+      return NanThrowError("init(): initialization failed. sorry – no idea why.", err);
   }
 
-  return scope.Close(Undefined());
+  NanReturnValue(NanUndefined());
 }
 
 /**
  * exports.reset() – blacks out the LED-strip and finalizes the library
  * (disable PWM, free DMA-pages etc).
  */
-Handle<Value> Reset(const Arguments& args) {
-  HandleScope scope;
+NAN_METHOD(Reset) {
+  NanScope();
 
   memset(ledstring.channel[0].leds, 0, sizeof(*ledstring.channel[0].leds) * ledstring.channel[0].count);
 
@@ -144,14 +139,14 @@ Handle<Value> Reset(const Arguments& args) {
   ws2811_wait(&ledstring);
   ws2811_fini(&ledstring);
 
-  return scope.Close(Undefined());
+  NanReturnValue(NanUndefined());
 }
 
 
 void initialize(Handle<Object> exports) {
-  exports->Set(String::NewSymbol("init"),   FunctionTemplate::New(Init)->GetFunction());
-  exports->Set(String::NewSymbol("reset"),  FunctionTemplate::New(Reset)->GetFunction());
-  exports->Set(String::NewSymbol("render"), FunctionTemplate::New(Render)->GetFunction());
+  exports->Set(NanNew<String>("init"),   NanNew<FunctionTemplate>(Init)->GetFunction());
+  exports->Set(NanNew<String>("reset"),  NanNew<FunctionTemplate>(Reset)->GetFunction());
+  exports->Set(NanNew<String>("render"), NanNew<FunctionTemplate>(Render)->GetFunction());
 }
 
 NODE_MODULE(rpi_ws281x, initialize)
