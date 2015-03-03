@@ -10,7 +10,9 @@
     "hardware"
   ],
   "main": "index.js",
-  "engines": { "node": ">=0.10.33" },
+  "engines": {
+    "node": ">=0.10.33"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/raspberry-node/node-rpi-ws281x-native.git"
@@ -19,6 +21,8 @@
   "homepage": "https://github.com/raspberry-node/node-rpi-ws281x-native",
   "bugs": "https://github.com/raspberry-node/node-rpi-ws281x-native/issues",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "nan": "^1.7.0"
+  },
   "devDependencies": {}
 }
