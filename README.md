@@ -30,17 +30,25 @@ exports = {
     /**
      * configures PWM and DMA for sending data to the LEDs
      *
-     * @param numLeds {Number}  number of LEDs to be controlled
-     * @param [options] {Object}  (acutally only tested with default-values)
-     *                            intialization-options for the library
-     *                            (PWM frequency, DMA channel, GPIO, Brightness)
+     * @param {Number} numLeds  number of LEDs to be controlled
+     * @param {?Object} options  (acutally only tested with default-values)
+     *                           intialization-options for the library
+     *                           (PWM frequency, DMA channel, GPIO, Brightness)
      */
     init: function(numLeds, options) {},
 
     /**
+     * register a mapping to manipulate array-indices within the
+     * data-array before rendering.
+     *
+     * @param {Array.<Number>} map  the mapping, indexed by destination.
+     */
+    setIndexMapping: function(map) {},
+
+    /**
      * send data to the LED-strip.
      *
-     * @param data {Uint32Array}  the pixel-data, 24bit per pixel in
+     * @param {Uint32Array} data  the pixel-data, 24bit per pixel in
      *                            RGB-format (0xff0000 is red).
      */
     render: function(data) {},
