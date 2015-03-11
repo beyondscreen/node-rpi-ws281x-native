@@ -1,6 +1,7 @@
 # control ws281x-LEDs with node.js
 
-> if you happen to know C++ and node/V8, I would really appreciate any help and feedback on this module.
+> if you happen to know C++ and node/iojs/V8, I would really appreciate any help 
+> and feedback on this module.
 > There is certainly lots of room for improvement.
 
 This module provides native bindings to the [rpi_ws281x](https://github.com/jgarff/rpi_ws281x)
@@ -23,7 +24,7 @@ if you prefer installing from source:
 
 ## usage
 
-this module exports only three functions to send data to the LED-String.
+this module mainly exports four functions to send data to the LED-String.
 
 ```javascript
 exports = {
@@ -61,6 +62,23 @@ exports = {
 };
 ```
 
+### Index-Mapping
+
+As the wiring of the LEDs not neccessarily corresponds to the pixel-ordering in the 
+data-array, this module supports index-remapping. So, if you are building a grid of LEDs you can just use an alternating, top-to-bottom or mirrored wiring and use the remapping in order to use a unified structure in the incoming data-arrays.
+
+### Events
+
+In Addition to that, the exported object is an `EventEmitter` that will emit the following Events:
+
+ * `beforeRender`: emitted just before the data is prepared and sent to the LED-driver. 
+   The handler will receive the pixel-data array (an `Uint32Array`) as single argument.
+   As this event is handled synchronously, you can use this to manipulate the data before
+   it is sent to the LED-Strip.
+ * `render`: emitted after the data has been sent to the LED-Strip. The single argument 
+   passed to the handler is the final pixel-data array, after index-remapping and 
+   gamma-correction.
+
 ## testing basic functionality
 
 connect the WS2812-strip to the raspberry-pi as described [here](https://learn.adafruit.com/neopixels-on-raspberry-pi/wiring)
@@ -70,15 +88,26 @@ You should now see some rainbow-colors animation on the LED-strip.
 
 ## hardware
 
-There is a guide [over at adafruit.com](https://learn.adafruit.com/neopixels-on-raspberry-pi) on how
-to get the hardware up and running. Essentially, you need the Raspberry Pi, a logic-level converter
-to shift the output-voltage of the GPIO from 3.3V up to 5V (should be fast enough to handle 800kHz,
-the guide mentions the 74AHCT125, mine is an 74HCT125N) and of course an LED-Strip or other types of WS2812-LEDs.
+There is a guide [over at adafruit.com](https://learn.adafruit.com/neopixels-on-raspberry-pi)
+on how to get the hardware up and running. I followed these instructions by the word and had a working LED-strip.
+
+Essentially, you need the Raspberry Pi, a logic-level converter to shift the output-voltage of the GPIO from 3.3V up to 5V (the guide mentions the 74AHCT125, mine is an 74HCT125N which works just as well) and of course a LED-Strip or other types of WS2812-LEDs.
 
 To connect all that together, I'd recommend buying a small breadboard and some jumper-wires.
-Also, consider buing a 5V power-supply that can deliver up to 60mA per LED (so you'll need 6A to fully power 100 LEDs).
-For smaller applications, a decent USB-charger should do.
+Also, consider buying a 5V power-supply that can deliver up to 60mA per LED (so you'll need 
+up to 6A to fully power 100 LEDs). For smaller applications, a decent USB-charger should do.
 
-You can buy everything you need at adafruit or any other electronics reseller
-(germany: check [conrad electronic](http://www.conrad.de) or [watterott](http://watterott.com) – this is
+### Buying stuff
+
+A short checklist of what you will need:
+
+ * Raspberry-PI and SD-Card
+ * 5V power-supply (Meanwell for instance builds really good ones)
+ * LED-Strip with WS2811/WS2812 Controllers (there are several other controller-variations 
+   that are not supported)
+ * a breadboard and some jumper-wires (m/m as well as at least two f/m to connect the GPIO-Pins)
+ * a 3.3V to 5V logic-level converter (74AHCT125 or 74HCT125N, others will probably also work)
+ * more wire to connect the LED-strips
+
+You can buy everything at [adafruit.com](https://adafruit.com), [sparkfun](https://sparkfun.com), on ebay or your favourite electronics retailer (germany: check [conrad electronic](http://www.conrad.de) or [watterott](http://watterott.com)
 where i bought most of my stuff).
