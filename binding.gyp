@@ -5,20 +5,44 @@
       'targets': [
         {
           'target_name': 'rpi_ws281x',
-          'sources': ['./src/rpi-ws281x.cc'],
-          'dependencies': ['libws2811'],
+          'type': 'none',
+          'dependencies': ['rpi1_ws281x', 'rpi2_ws281x']
+        },
+
+        {
+          'target_name': 'rpi1_ws281x',
+          'sources': ['./src/rpi1-ws281x.cc'],
+          'dependencies': ['rpi1_libws2811'],
           'include_dirs': ['<!(node -e "require(\'nan\')")']
         },
 
         {
-          'target_name': 'libws2811',
+          'target_name': 'rpi2_ws281x',
+          'sources': ['./src/rpi2-ws281x.cc'],
+          'dependencies': ['rpi2_libws2811'],
+          'include_dirs': ['<!(node -e "require(\'nan\')")']
+        },
+
+        {
+          'target_name': 'rpi1_libws2811',
           'type': 'static_library',
           'sources': [
-            './src/rpi_ws281x/ws2811.c',
-            './src/rpi_ws281x/pwm.c',
-            './src/rpi_ws281x/dma.c',
-            './src/rpi_ws281x/mailbox.c',
-            './src/rpi_ws281x/board_info.c'
+            './src/rpi1_ws281x/ws2811.c',
+            './src/rpi1_ws281x/pwm.c',
+            './src/rpi1_ws281x/dma.c'
+          ],
+          'cflags': ['-O2', '-Wall']
+        },
+
+        {
+          'target_name': 'rpi2_libws2811',
+          'type': 'static_library',
+          'sources': [
+            './src/rpi2_ws281x/ws2811.c',
+            './src/rpi2_ws281x/pwm.c',
+            './src/rpi2_ws281x/dma.c',
+            './src/rpi2_ws281x/mailbox.c',
+            './src/rpi2_ws281x/board_info.c'
           ],
           'cflags': ['-O2', '-Wall']
         },
@@ -29,7 +53,10 @@
           'dependencies': ['rpi_ws281x'],
           'copies': [{
                        'destination': './lib/binding/',
-                       'files': ['<(PRODUCT_DIR)/rpi_ws281x.node']
+                       'files': [
+                         '<(PRODUCT_DIR)/rpi1_ws281x.node',
+                         '<(PRODUCT_DIR)/rpi2_ws281x.node'
+                       ]
                      }]
         }
       ]
