@@ -9,7 +9,7 @@
 #include <algorithm>
 
 extern "C" {
-  #include "rpi_ws281x/ws2811.h"
+  #include "rpi1_ws281x/ws2811.h"
 }
 
 using namespace v8;
@@ -148,5 +148,3 @@ void initialize(Handle<Object> exports) {
   exports->Set(NanNew<String>("reset"),  NanNew<FunctionTemplate>(Reset)->GetFunction());
   exports->Set(NanNew<String>("render"), NanNew<FunctionTemplate>(Render)->GetFunction());
 }
-
-NODE_MODULE(rpi_ws281x, initialize)
