@@ -35,13 +35,28 @@ NAN_METHOD(Render) {
     return NanThrowTypeError("render(): missing argument.");
   }
 
-  Local<Object> obj = args[0]->ToObject();
-  if (obj->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedIntArray) {
-    return NanThrowTypeError("render(): expected argument to be an Uint32Array.");
+  if(!args[0]->IsUint32Array()) {
+    return NanThrowTypeError(
+        "render(): expected argument to be an Uint32Array.");
   }
 
-  int len = obj->GetIndexedPropertiesExternalArrayDataLength();
-  uint32_t* data = static_cast<uint32_t*>(obj->GetIndexedPropertiesExternalArrayData());
+  Local<Uint32Array> arr = Local<Uint32Array>::Cast(args[0]->ToObject());
+
+  if(!arr->HasIndexedPropertiesInExternalArrayData()) {
+    // This is still a bit mysterious why this happens, but arrays with less
+    // than 16 elements are not created with their indexed properties in an
+    // external array. In this case a call to the Buffer-method will trigger
+    // JSTypedArray::MaterializeArrayBuffer which in turn converts the array
+    // into an external array.
+    arr->Buffer();
+  }
+
+  if (arr->GetIndexedPropertiesExternalArrayDataType() != kExternalUnsignedIntArray) {
+    return NanThrowTypeError("render(): something did go wrong. Please file a bugreport.");
+  }
+
+  int len = arr->GetIndexedPropertiesExternalArrayDataLength();
+  uint32_t* data = static_cast<uint32_t*>(arr->GetIndexedPropertiesExternalArrayData());
 
   memcpy(ledstring.channel[0].leds, data, std::min(4*len, 4*ledstring.channel[0].count));
 
