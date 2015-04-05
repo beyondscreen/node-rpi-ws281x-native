@@ -4,9 +4,10 @@
 > and feedback on this module.
 > There is certainly lots of room for improvement.
 
-This module provides native bindings to the [rpi_ws281x](https://github.com/jgarff/rpi_ws281x)
-library by Jeremy Garff to provide a very basic set of functions to write data to a strip of
-ws2811/ws2812 LEDs. **will only run on the Raspberry Pi.**
+This module provides native bindings to the
+[rpi_ws281x](https://github.com/jgarff/rpi_ws281x) library by Jeremy Garff to
+provide a very basic set of functions to write data to a strip of
+ws2811/ws2812 LEDs. **this will only run on the Raspberry Pi.**
 
 ## setup
 
@@ -29,7 +30,7 @@ this module mainly exports four functions to send data to the LED-String.
 ```javascript
 exports = {
     /**
-     * configures PWM and DMA for sending data to the LEDs
+     * configures PWM and DMA for sending data to the LEDs.
      *
      * @param {Number} numLeds  number of LEDs to be controlled
      * @param {?Object} options  (acutally only tested with default-values)
@@ -64,38 +65,48 @@ exports = {
 
 ### Index-Mapping
 
-As the wiring of the LEDs not neccessarily corresponds to the pixel-ordering in the 
-data-array, this module supports index-remapping. So, if you are building a grid of LEDs you can just use an alternating, top-to-bottom or mirrored wiring and use the remapping in order to use a unified structure in the incoming data-arrays.
+As the wiring of the LEDs not neccessarily corresponds to the pixel-ordering in
+the data-array, this module supports index-remapping. So, if you are building a
+grid of LEDs you can just use an alternating, top-to-bottom or mirrored wiring
+and use the remapping in order to use a unified structure in the incoming
+data-arrays.
 
 ### Events
 
-In Addition to that, the exported object is an `EventEmitter` that will emit the following Events:
+In addition to that, the exported object is an `EventEmitter` that will emit
+the following Events:
 
- * `beforeRender`: emitted just before the data is prepared and sent to the LED-driver. 
-   The handler will receive the pixel-data array (an `Uint32Array`) as single argument.
-   As this event is handled synchronously, you can use this to manipulate the data before
-   it is sent to the LED-Strip.
- * `render`: emitted after the data has been sent to the LED-Strip. The single argument 
-   passed to the handler is the final pixel-data array, after index-remapping and 
-   gamma-correction.
+ * `beforeRender`: emitted just before the data is prepared and sent to the
+   LED-driver. The handler will receive the pixel-data array (an `Uint32Array`)
+   as single argument. As this event is handled synchronously, you can use this
+   to manipulate the data before it is sent to the LED-Strip.
+ * `render`: emitted after the data has been sent to the LED-Strip. The single
+   argument passed to the handler is the final pixel-data array, after
+   index-remapping and gamma-correction.
 
 ## testing basic functionality
 
-connect the WS2812-strip to the raspberry-pi as described [here](https://learn.adafruit.com/neopixels-on-raspberry-pi/wiring)
-and run the command `node examples/rainbow.js <numLeds>`.
+connect the WS2812-strip to the raspberry-pi as described
+[here](https://learn.adafruit.com/neopixels-on-raspberry-pi/wiring) and run
+the command `node examples/rainbow.js <numLeds>`.
 You should now see some rainbow-colors animation on the LED-strip.
 
 
-## hardware
+## Hardware
 
 There is a guide [over at adafruit.com](https://learn.adafruit.com/neopixels-on-raspberry-pi)
-on how to get the hardware up and running. I followed these instructions by the word and had a working LED-strip.
+on how to get the hardware up and running. I followed these instructions by
+the word and had a working LED-strip.
 
-Essentially, you need the Raspberry Pi, a logic-level converter to shift the output-voltage of the GPIO from 3.3V up to 5V (the guide mentions the 74AHCT125, mine is an 74HCT125N which works just as well) and of course a LED-Strip or other types of WS2812-LEDs.
+Essentially, you need the Raspberry Pi, a logic-level converter to shift the
+output-voltage of the GPIO from 3.3V up to 5V (the guide mentions the 74AHCT125,
+mine is an 74HCT125N which works just as well) and of course a LED-Strip or
+other types of WS2812-LEDs.
 
-To connect all that together, I'd recommend buying a small breadboard and some jumper-wires.
-Also, consider buying a 5V power-supply that can deliver up to 60mA per LED (so you'll need 
-up to 6A to fully power 100 LEDs). For smaller applications, a decent USB-charger should do.
+To connect all that together, I'd recommend buying a small breadboard and some
+jumper-wires. Also, consider buying a 5V power-supply that can deliver up to
+60mA per LED (so you'll need up to 6A (30W) to fully power 100 LEDs).
+For smaller applications, a decent USB-charger should do.
 
 ### Buying stuff
 
@@ -103,11 +114,15 @@ A short checklist of what you will need:
 
  * Raspberry-PI and SD-Card
  * 5V power-supply (Meanwell for instance builds really good ones)
- * LED-Strip with WS2811/WS2812 Controllers (there are several other controller-variations 
-   that are not supported)
- * a breadboard and some jumper-wires (m/m as well as at least two f/m to connect the GPIO-Pins)
- * a 3.3V to 5V logic-level converter (74AHCT125 or 74HCT125N, others will probably also work)
+ * LED-Strip with WS2811/WS2812 Controllers (there are several other
+   controller-variations that are not supported)
+ * a breadboard and some jumper-wires (m/m as well as at least two f/m to
+   connect the GPIO-Pins)
+ * a 3.3V to 5V logic-level converter (74AHCT125 or 74HCT125N, others will
+   probably also work)
  * more wire to connect the LED-strips
 
-You can buy everything at [adafruit.com](https://adafruit.com), [sparkfun](https://sparkfun.com), on ebay or your favourite electronics retailer (germany: check [conrad electronic](http://www.conrad.de) or [watterott](http://watterott.com)
-where i bought most of my stuff).
+You can buy everything at [adafruit.com](https://adafruit.com),
+[sparkfun](https://sparkfun.com), on ebay or your favourite electronics
+retailer (germany: check [conrad electronic](http://www.conrad.de)
+or [watterott](http://watterott.com) where i bought most of my stuff).
