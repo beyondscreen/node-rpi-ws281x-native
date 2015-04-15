@@ -111,3 +111,13 @@ A short checklist of what you will need:
 
 You can buy everything at [adafruit.com](https://adafruit.com), [sparkfun](https://sparkfun.com), on ebay or your favourite electronics retailer (germany: check [conrad electronic](http://www.conrad.de) or [watterott](http://watterott.com)
 where i bought most of my stuff).
+
+### Known Issues
+
+There is a conflict where the internal soundcard uses the same GPIO / DMA / PWM functions that are needed to run the LED-drivers. As far as I know you can not use both at the same time.
+
+One workaround is to use an external soundcard and make it the default device:
+
+Edit /etc/modprobe.d/alsa-base.conf and comment out the line options snd-usb-audio index=-2
+
+If anyone finds a better solution please get in touch!
