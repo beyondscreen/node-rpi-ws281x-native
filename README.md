@@ -23,7 +23,7 @@ if you prefer installing from source:
     node-gyp rebuild
 
 
-## usage
+## basic usage
 
 this module mainly exports four functions to send data to the LED-String.
 
@@ -84,12 +84,30 @@ the following Events:
    argument passed to the handler is the final pixel-data array, after
    index-remapping and gamma-correction.
 
+
 ## testing basic functionality
 
 connect the WS2812-strip to the raspberry-pi as described
 [here](https://learn.adafruit.com/neopixels-on-raspberry-pi/wiring) and run
-the command `node examples/rainbow.js <numLeds>`.
+the command `sudo node examples/rainbow.js <numLeds>`.
 You should now see some rainbow-colors animation on the LED-strip.
+
+
+## needs to run as root
+
+As the native part of this module needs to directly interface with the physical
+memory of the raspberry-pi (which is required in order to configure the PWM and
+DMA-modules), it always has to run with root-privileges (there are probably ways
+around this requirement, but that doesn't change the fact that the node-process
+running the LEDs needs access to the raw physical memory – a thing you should
+never allow to any user other than root).
+
+If you are using this module as part of a program that should not be run with
+elevated privileges, it would be a good idea to have the LED-driver running in
+a seperate process. In such a case you could use the openpixel-control protocol
+to send the pixel-data to the driver-process.
+A stream-based node-implementation and some more information
+[can be found here](https://github.com/raspberry-node/node-openpixelcontrol).
 
 
 ## Hardware
