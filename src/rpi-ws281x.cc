@@ -135,7 +135,7 @@ NAN_METHOD(Init) {
   int err = ws2811_init(&ledstring);
 
   if(err) {
-      return NanThrowError("init(): initialization failed. sorry – no idea why.", err);
+      return NanThrowError("init(): initialization failed. sorry – no idea why.");
   }
 
   NanReturnValue(NanUndefined());
