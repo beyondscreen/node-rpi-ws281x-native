@@ -22,7 +22,7 @@
   "bugs": "https://github.com/raspberry-node/node-rpi-ws281x-native/issues",
   "license": "MIT",
   "dependencies": {
-    "nan": "^1.7.0"
+    "nan": "^2.0.9"
   },
   "devDependencies": {}
 }
