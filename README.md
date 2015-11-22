@@ -54,7 +54,7 @@ exports = {
      *
      * @param {Number} brightness the brightness, value from 0 to 255.
      */
-    setBrightness(brightness) {},
+    setBrightness: function(brightness) {},
 
     /**
      * send data to the LED-strip.
