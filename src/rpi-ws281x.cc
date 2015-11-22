@@ -23,6 +23,7 @@ ws2811_channel_t
   channel0data,
   channel1data;
 
+
 /**
  * exports.render(Uint32Array data) - sends the data to the LED-strip,
  *   if data is longer than the number of leds, remaining data will be ignored.
@@ -52,6 +53,7 @@ void render(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 
   info.GetReturnValue().SetUndefined();
 }
+
 
 /**
  * exports.init(Number ledCount [, Object config]) - setup the configuration and initialize the library.
@@ -122,9 +124,28 @@ void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   if(err) {
       return Nan::ThrowError("init(): initialization failed. sorry – no idea why.");
   }
+  info.GetReturnValue().SetUndefined();
+}
+
+
+/**
+ * exports.setBrightness()
+ */
+void setBrightness(const Nan::FunctionCallbackInfo<v8::Value>& info) {
+  if(info.Length() != 1) {
+      return Nan::ThrowError("setBrightness(): no value given");
+  }
+
+  // first argument is a number
+  if(!info[0]->IsNumber()) {
+    return Nan::ThrowTypeError("setBrightness(): argument 0 is not a number");
+  }
+
+  ledstring.channel[0].brightness = info[0]->Int32Value();
 
   info.GetReturnValue().SetUndefined();
 }
+
 
 /**
  * exports.reset() – blacks out the LED-strip and finalizes the library
@@ -141,10 +162,16 @@ void reset(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 }
 
 
+/**
+ * initializes the module.
+ */
 void initialize(Handle<Object> exports) {
   NAN_EXPORT(exports, init);
   NAN_EXPORT(exports, reset);
   NAN_EXPORT(exports, render);
+  NAN_EXPORT(exports, setBrightness);
 }
 
 NODE_MODULE(rpi_ws281x, initialize)
+
+// vi: ts=2 sw=2 expandtab

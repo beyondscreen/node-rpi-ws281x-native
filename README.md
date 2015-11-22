@@ -18,7 +18,7 @@ this module is available via npm:
 if you prefer installing from source:
 
     npm install -g node-gyp
-    git clone --recursive https://github.com/raspberry-node/node-rpi-ws281x-native.git
+    git clone --recursive https://github.com/beyondscreen/node-rpi-ws281x-native.git
     cd rpi-ws281x-native
     node-gyp rebuild
 
@@ -46,6 +46,15 @@ exports = {
      * @param {Array.<Number>} map  the mapping, indexed by destination.
      */
     setIndexMapping: function(map) {},
+
+    /**
+     * set the overall-brightness for the entire strip.
+     * This is a fixed scaling applied by the driver when
+     * data is sent to the strip
+     *
+     * @param {Number} brightness the brightness, value from 0 to 255.
+     */
+    setBrightness(brightness) {},
 
     /**
      * send data to the LED-strip.
@@ -142,8 +151,10 @@ A short checklist of what you will need:
 
 You can buy everything at [adafruit.com](https://adafruit.com),
 [sparkfun](https://sparkfun.com), on ebay or your favourite electronics
-retailer (germany: check [conrad electronic](http://www.conrad.de)
-or [watterott](http://watterott.com) where i bought most of my stuff).
+retailer (germany: check [conrad electronic](http://www.conrad.de),
+[watterott](http://watterott.com) or [reichelt](http://reichelt.de) where
+i bought most of my stuff).
+
 
 ## Known Issues
 
@@ -155,5 +166,7 @@ One workaround is to use an external (USB) soundcard and make it the
 default device:
 
 Edit /etc/modprobe.d/alsa-base.conf and comment out the line 
-options snd-usb-audio index=-2
+
+    options snd-usb-audio index=-2
+
 If anyone finds a better solution please get in touch!
