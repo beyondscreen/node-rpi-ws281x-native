@@ -5,8 +5,6 @@ var NUM_LEDS = parseInt(process.argv[2], 10) || 10,
 
 ws281x.init(NUM_LEDS);
 
-ws281x.setIndexMapping(ws281x.indexMapping.mirrorMatrixX(10,10));
-
 // ---- trap the SIGINT and reset before exit
 process.on('SIGINT', function () {
   ws281x.reset();
