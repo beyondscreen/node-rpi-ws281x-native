@@ -116,7 +116,7 @@ elevated privileges, it would be a good idea to have the LED-driver running in
 a seperate process. In such a case you could use the openpixel-control protocol
 to send the pixel-data to the driver-process.
 A stream-based node-implementation and some more information
-[can be found here](https://github.com/raspberry-node/node-openpixelcontrol).
+[can be found here](https://github.com/beyondscreen/node-openpixelcontrol).
 
 
 ## Hardware
