@@ -20,6 +20,7 @@ if you prefer installing from source:
     npm install -g node-gyp
     git clone --recursive https://github.com/beyondscreen/node-rpi-ws281x-native.git
     cd rpi-ws281x-native
+    npm install
     node-gyp rebuild
 
 
