@@ -9,167 +9,282 @@
 #include <algorithm>
 
 extern "C" {
-  #include "rpi_ws281x/ws2811.h"
+#include "rpi_ws281x/ws2811.h"
 }
 
 using namespace v8;
 
-#define DEFAULT_TARGET_FREQ     800000
-#define DEFAULT_GPIO_PIN        18
-#define DEFAULT_DMANUM          5
+#define DEFAULT_TARGET_FREQ 800000
+#define DEFAULT_GPIO_PIN 18
+#define DEFAULT_DMANUM 5
 
-ws2811_t ledstring;
-ws2811_channel_t
-  channel0data,
-  channel1data;
+#define PARAM_FREQ 1
+#define PARAM_DMANUM 2
+#define PARAM_GPIONUM 3
+#define PARAM_COUNT 4
+#define PARAM_INVERT 5
+#define PARAM_BRIGHTNESS 6
+#define PARAM_STRIP_TYPE 7
 
+ws2811_t ws281x =
+    {
+        .freq = DEFAULT_TARGET_FREQ,
+        .dmanum = DEFAULT_DMANUM,
+        .channel =
+            {
+                [0] =
+                    {
+                        .gpionum = DEFAULT_GPIO_PIN,
+                        .count = 0,
+                        .invert = 0,
+                        .brightness = 255,
+                        .strip_type = 0,
+                    },
+                [1] =
+                    {
+                        .gpionum = 0,
+                        .count = 0,
+                        .invert = 0,
+                        .brightness = 0,
+                    },
+            },
+};
 
 /**
- * exports.render(Uint32Array data) - sends the data to the LED-strip,
- *   if data is longer than the number of leds, remaining data will be ignored.
- *   Otherwise, data
+ * ws281x.setParam(param:Number, value:Number)
+ * wrap setting global params in ws2811_t
  */
-void render(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  if(info.Length() != 1) {
-    Nan::ThrowTypeError("render(): missing argument.");
+void setParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
+{
+  if (info.Length() != 2)
+  {
+    Nan::ThrowTypeError("setParam(): expected two params");
     return;
   }
 
-  if(!node::Buffer::HasInstance(info[0])) {
-    Nan::ThrowTypeError("render(): expected argument to be a Buffer.");
+  if (!info[0]->IsNumber())
+  {
+    Nan::ThrowTypeError("setParam(): expected argument 1 to be the parameter-id");
     return;
   }
 
+  if (!info[1]->IsNumber())
+  {
+    Nan::ThrowTypeError("setParam(): expected argument 2 to be the value");
+    return;
+  }
+
+  int param = info[0]->Int32Value();
+  int value = info[1]->Int32Value();
+
+  switch (param)
+  {
+  case PARAM_FREQ:
+    ws281x.freq = value;
+    break;
+  case PARAM_DMANUM:
+    ws281x.dmanum = value;
+    break;
+
+  default:
+    Nan::ThrowTypeError("setParam(): invalid parameter-id");
+    return;
+  }
+
+  info.GetReturnValue.SetUndefined();
+}
+
+/**
+ * ws281x.setChannelParam(channel:Number, param:Number, value:Number)
+ * 
+ * wrap setting params in ws2811_channel_t
+ */
+void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
+{
+  if (info.Length() != 3)
+  {
+    Nan::ThrowTypeError("setChannelParam(): missing argument");
+    return;
+  }
+
+  // retrieve channelNumber from argument 1
+  if (!info[0]->IsNumber())
+  {
+    Nan::ThrowTypeError("setChannelParam(): expected argument 1 to be the channel-number");
+    return;
+  }
+
+  int channelNumber = info[0]->Int32Value();
+  if (channelNumber > 1 || channelNumber < 0)
+  {
+    Nan::ThrowError("setChannelParam(): invalid chanel-number");
+    return;
+  }
+
+  if (!info[1]->IsNumber())
+  {
+    Nan::ThrowTypeError("setChannelParam(): expected argument 2 to be the parameter-id");
+    return;
+  }
+
+  if (!info[2]->IsNumber())
+  {
+    Nan::ThrowTypeError("setChannelParam(): expected argument 3 to be the value");
+    return;
+  }
+
+  ws2811_channel_t channel = ws281x.channel[channelNumber];
+  int param = info[1]->Int32Value();
+  int value = info[2]->Int32Value();
+
+  switch (param)
+  {
+  case PARAM_GPIONUM:
+    channel.gpionum = value;
+    break;
+  case PARAM_COUNT:
+    channel.count = value;
+    break;
+  case PARAM_INVERT:
+    channel.invert = value;
+    break;
+  case PARAM_BRIGHTNESS:
+    channel.brightness = (uint8_t)value;
+    break;
+  case PARAM_STRIP_TYPE:
+    channel.strip_type = value;
+    break;
+
+  default:
+    Nan::ThrowTypeError("setChannelParam(): invalid parameter-id");
+    return;
+  }
+
+  info.GetReturnValue().SetUndefined();
+}
+
+/**
+ * ws281x.setChannelData(channel:Number, buffer:Buffer)
+ * 
+ * wrap copying data to ws2811_channel_t.leds
+ */
+void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
+{
+  if (info.Length() != 2)
+  {
+    Nan::ThrowTypeError("setChannelData(): missing argument.");
+    return;
+  }
+
+  // retrieve channelNumber from argument 1
+  if (!info[0]->IsNumber())
+  {
+    Nan::ThrowTypeError("setChannelData(): expected argument 1 to be the channel-number.");
+    return;
+  }
+
+  int channelNumber = info[0]->Int32Value();
+  if (channelNumber > 1 || channelNumber < 0)
+  {
+    Nan::ThrowError("setChannelData(): invalid chanel-number");
+    return;
+  }
+  ws2811_channel_t channel = ws281x.channel[channelNumber];
+
+  // retrieve buffer from argument 2
+  if (!node::Buffer::HasInstance(info[1]))
+  {
+    Nan::ThrowTypeError("setChannelData(): expected argument 2 to be a Buffer");
+    return;
+  }
   Local<Object> buffer = info[0]->ToObject();
+  uint32_t *data = (uint32_t *)node::Buffer::Data(buffer);
 
-  int numBytes = std::min((int)node::Buffer::Length(buffer),
-      4 * ledstring.channel[0].count);
+  if (channel.count == 0 || channel.leds == NULL)
+  {
+    Nan::ThrowError("setChannelData(): channel not ready");
+    return;
+  }
 
-  uint32_t* data = (uint32_t*) node::Buffer::Data(buffer);
-  memcpy(ledstring.channel[0].leds, data, numBytes);
+  int numBytes = std::min(
+      node::Buffer::Length(buffer),
+      sizeof(ws2811_led_t) * ws281x.channel[0].count);
 
-  ws2811_wait(&ledstring);
-  ws2811_render(&ledstring);
+  memcpy(channel.leds, data, numBytes);
 
-  info.GetReturnValue().SetUndefined();
+  info.GetReturnValue.SetUndefined();
 }
-
 
 /**
- * exports.init(Number ledCount [, Object config]) - setup the configuration and initialize the library.
+ * wrap ws2811_init()
  */
-void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  ledstring.freq    = DEFAULT_TARGET_FREQ;
-  ledstring.dmanum  = DEFAULT_DMANUM;
+void init(const Nan::FunctionCallbackInfo<v8::Value> &info)
+{
+  ws2811_return_t ret;
 
-  channel0data.gpionum = DEFAULT_GPIO_PIN;
-  channel0data.invert = 0;
-  channel0data.count = 0;
-  channel0data.brightness = 255;
-
-  channel1data.gpionum = 0;
-  channel1data.invert = 0;
-  channel1data.count = 0;
-  channel1data.brightness = 255;
-
-  ledstring.channel[0] = channel0data;
-  ledstring.channel[1] = channel1data;
-
-  if(info.Length() < 1) {
-    return Nan::ThrowTypeError("init(): expected at least 1 argument");
+  ret = ws2811_init(&ws281x);
+  if (ret != WS2811_SUCCESS)
+  {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
   }
 
-  // first argument is a number
-  if(!info[0]->IsNumber()) {
-    return Nan::ThrowTypeError("init(): argument 0 is not a number");
-  }
-
-  ledstring.channel[0].count = info[0]->Int32Value();
-
-  // second (optional) an Object
-  if(info.Length() >= 2 && info[1]->IsObject()) {
-    Local<Object> config = info[1]->ToObject();
-
-    Local<String>
-        symFreq = Nan::New<String>("frequency").ToLocalChecked(),
-        symDmaNum = Nan::New<String>("dmaNum").ToLocalChecked(),
-        symGpioPin = Nan::New<String>("gpioPin").ToLocalChecked(),
-        symInvert = Nan::New<String>("invert").ToLocalChecked(),
-        symBrightness = Nan::New<String>("brightness").ToLocalChecked();
-
-    if(config->HasOwnProperty(symFreq)) {
-      ledstring.freq = config->Get(symFreq)->Uint32Value();
-    }
-
-    if(config->HasOwnProperty(symDmaNum)) {
-      ledstring.dmanum = config->Get(symDmaNum)->Int32Value();
-    }
-
-    if(config->HasOwnProperty(symGpioPin)) {
-      ledstring.channel[0].gpionum = config->Get(symGpioPin)->Int32Value();
-    }
-
-    if(config->HasOwnProperty(symInvert)) {
-      ledstring.channel[0].invert = config->Get(symInvert)->Int32Value();
-    }
-
-    if(config->HasOwnProperty(symBrightness)) {
-      ledstring.channel[0].brightness = config->Get(symBrightness)->Int32Value();
-    }
-  }
-
-  // FIXME: handle errors, throw JS-Exception
-  int err = ws2811_init(&ledstring);
-
-  if(err) {
-      return Nan::ThrowError("init(): initialization failed. sorry – no idea why.");
-  }
-  info.GetReturnValue().SetUndefined();
+  info.GetReturnValue.SetUndefined();
 }
-
 
 /**
- * exports.setBrightness()
+ * wrap ws2811_wait() and ws2811_render()
  */
-void setBrightness(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  if(info.Length() != 1) {
-      return Nan::ThrowError("setBrightness(): no value given");
+void render(const Nan::FunctionCallbackInfo<v8::Value> &info)
+{
+  ws2811_return_t ret;
+
+  ret = ws2811_wait(&ws281x);
+  if (ret != WS2811_SUCCESS)
+  {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
   }
 
-  // first argument is a number
-  if(!info[0]->IsNumber()) {
-    return Nan::ThrowTypeError("setBrightness(): argument 0 is not a number");
+  ret = ws2811_render(&ws281x);
+  if (ret != WS2811_SUCCESS)
+  {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
   }
 
-  ledstring.channel[0].brightness = info[0]->Int32Value();
-
-  info.GetReturnValue().SetUndefined();
+  info.GetReturnValue.SetUndefined();
 }
-
 
 /**
- * exports.reset() – blacks out the LED-strip and finalizes the library
- * (disable PWM, free DMA-pages etc).
+ * wrap ws2811_wait() and ws2811_fini()
  */
-void reset(const Nan::FunctionCallbackInfo<v8::Value>& info) {
-  memset(ledstring.channel[0].leds, 0, sizeof(*ledstring.channel[0].leds) * ledstring.channel[0].count);
+void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info)
+{
+  ws2811_return_t ret;
 
-  ws2811_render(&ledstring);
-  ws2811_wait(&ledstring);
-  ws2811_fini(&ledstring);
+  ret = ws2811_wait(&ws281x);
+  if (ret != WS2811_SUCCESS)
+  {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
+  }
 
-  info.GetReturnValue().SetUndefined();
+  ws2811_fini(&ws281x);
+  info.GetReturnValue.SetUndefined();
 }
-
 
 /**
  * initializes the module.
  */
-void initialize(Handle<Object> exports) {
+void initialize(Local<Object> exports)
+{
+  NAN_EXPORT(exports, setParam);
+  NAN_EXPORT(exports, setChannelParam);
+  NAN_EXPORT(exports, setChannelData);
   NAN_EXPORT(exports, init);
-  NAN_EXPORT(exports, reset);
   NAN_EXPORT(exports, render);
-  NAN_EXPORT(exports, setBrightness);
+  NAN_EXPORT(exports, finalize);
 }
 
 NODE_MODULE(rpi_ws281x, initialize)
