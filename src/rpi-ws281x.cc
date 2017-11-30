@@ -93,10 +93,9 @@ void setParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
   info.GetReturnValue.SetUndefined();
 }
-
 /**
  * ws281x.setChannelParam(channel:Number, param:Number, value:Number)
- * 
+ *
  * wrap setting params in ws2811_channel_t
  */
 void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
@@ -165,7 +164,7 @@ void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 /**
  * ws281x.setChannelData(channel:Number, buffer:Buffer)
- * 
+ *
  * wrap copying data to ws2811_channel_t.leds
  */
 void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
@@ -216,6 +215,8 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
 }
 
 /**
+ * ws281x.init()
+ *
  * wrap ws2811_init()
  */
 void init(const Nan::FunctionCallbackInfo<v8::Value> &info)
@@ -233,6 +234,8 @@ void init(const Nan::FunctionCallbackInfo<v8::Value> &info)
 }
 
 /**
+ * ws281x.render()
+ *
  * wrap ws2811_wait() and ws2811_render()
  */
 void render(const Nan::FunctionCallbackInfo<v8::Value> &info)
@@ -257,6 +260,8 @@ void render(const Nan::FunctionCallbackInfo<v8::Value> &info)
 }
 
 /**
+ * ws281x.finalize()
+ *
  * wrap ws2811_wait() and ws2811_fini()
  */
 void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info)
