@@ -13,7 +13,7 @@
         {
           'target_name': 'rpi_ws281x-version',
           'type': 'none',
-          'sources': ['./src/rpi_ws281x/version.h'],
+          'sources': ['./src/rpi_ws281x/version'],
           'actions': [{
             'action_name': 'make_version_h',
             'variables': {'version_file': './src/rpi_ws281x/version'},

@@ -125,7 +125,7 @@ void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  if (!info[2]->IsNumber())
+  if (!info[2]->IsNumber() && !info[2]->IsBoolean())
   {
     Nan::ThrowTypeError("setChannelParam(): expected argument 3 to be the value");
     return;
@@ -193,7 +193,7 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
     Nan::ThrowTypeError("setChannelData(): expected argument 2 to be a Buffer");
     return;
   }
-  Local<Object> buffer = info[0]->ToObject();
+  Local<Object> buffer = info[1]->ToObject();
   uint32_t *data = (uint32_t *)node::Buffer::Data(buffer);
 
   if (channel.count == 0 || channel.leds == NULL)

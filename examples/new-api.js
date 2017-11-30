@@ -1,23 +1,59 @@
 const ws281x = require('../lib/ws281x-native');
 
+const NUM_LEDS = parseInt(process.argv[2], 10) || 10;
+
 ws281x.init({
-  dmanum: 10,
-  freq: 800,
+  dma: 10,
+  freq: 800000,
   channels: [
-    {gpionum: 18, count: 100, invert: true, stripType: 'ws2812'},
-    {gpionum: 12, count: 12, invert: true, stripType: 'sk6812w'}
+    {gpio: 18, count: 10, invert: false, stripType: 'ws2812'}
   ]
 });
 
 const channel = ws281x.channels[0];
-const buffer = channel.buffer;
+const pixelData = channel.buffer;
 
-channel.brightness = 123;
+// ---- trap the SIGINT and reset before exit
+process.on('SIGINT', function() {
+  ws281x.reset();
+  process.nextTick(function() {
+    process.exit(0);
+  });
+});
 
-// ... fill buffer with pixel-data
+// ---- animation-loop
+let offset = 0;
+setInterval(function() {
+  for (let i = 0; i < 3 * NUM_LEDS; i += 3) {
+    const color = colorwheel((offset + i / 3) % 256);
 
-ws281x.render();
+    pixelData[i] = (color >> 16) & 0xff;
+    pixelData[i + 1] = (color >> 8) & 0xff;
+    pixelData[i + 2] = color & 0xff;
+  }
 
-// alternative
+  offset = (offset + 1) % 256;
+  console.log(pixelData);
+  ws281x.render();
+}, 1000 / 30);
 
-ws281x.setBrightness(0, 240); // 1 param: set brightness for both channels
+console.log('Press <ctrl>+C to exit.');
+
+// rainbow-colors, taken from http://goo.gl/Cs3H0v
+function colorwheel(pos) {
+  pos = 255 - pos;
+
+  if (pos < 85) {
+    return rgb2Int(255 - pos * 3, 0, pos * 3);
+  } else if (pos < 170) {
+    pos -= 85;
+    return rgb2Int(0, pos * 3, 255 - pos * 3);
+  } else {
+    pos -= 170;
+    return rgb2Int(pos * 3, 255 - pos * 3, 0);
+  }
+}
+
+function rgb2Int(r, g, b) {
+  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+}

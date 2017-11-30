@@ -4,8 +4,10 @@
   "description": "(raspberry-pi *only*) native bindings to control a strip of WS281x-LEDs with node.js",
   "keywords": [
     "raspberry",
+    "raspberrypi",
     "ws2811",
     "ws2812",
+    "sk6812",
     "led",
     "hardware"
   ],
@@ -23,7 +25,7 @@
   "license": "MIT",
   "scripts": {
     "install": "node-gyp rebuild -j4 --release",
-    "upload": "${UPLOAD_DEST} && rsync -ruvzd --exclude={.*,node_modules,build} . ${UPLOAD_DEST}"
+    "upload": "if [ ! -z ${UPLOAD_DEST:-''} ] ; then rsync -azv --delete --exclude={.*,node_modules,build} . ${UPLOAD_DEST} ; fi"
   },
   "dependencies": {
     "bindings": "^1.3.0",
@@ -31,7 +33,5 @@
     "rpi-version": "^1.3.0"
   },
   "devDependencies": {
-    "chokidar": "^1.7.0",
-    "chokidar-cli": "^1.2.0"
   }
 }
