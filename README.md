@@ -11,6 +11,12 @@ ws2811/ws2812 LEDs. **this will only run on the Raspberry Pi.**
 
 ## setup
 
+You will need an up-to-date-version of nodejs (>= 6.5).
+If you are running on a RaspberryPi 1 or zero, you might need to download the binaries manually.
+Head over to https://nodejs.org/dist, find the version to install and download the `-armv61`-version.
+See here for more information: https://raspberrypi.stackexchange.com/questions/48303/install-nodejs-for-all-raspberry-pi
+
+
 this module is available via npm:
 
     npm install rpi-ws281x-native

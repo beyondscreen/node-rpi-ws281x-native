@@ -26,29 +26,30 @@ using namespace v8;
 #define PARAM_BRIGHTNESS 6
 #define PARAM_STRIP_TYPE 7
 
-ws2811_t ws281x =
-    {
-        .freq = DEFAULT_TARGET_FREQ,
-        .dmanum = DEFAULT_DMANUM,
-        .channel =
-            {
-                [0] =
-                    {
-                        .gpionum = DEFAULT_GPIO_PIN,
-                        .count = 0,
-                        .invert = 0,
-                        .brightness = 255,
-                        .strip_type = 0,
-                    },
-                [1] =
-                    {
-                        .gpionum = 0,
-                        .count = 0,
-                        .invert = 0,
-                        .brightness = 0,
-                    },
-            },
-};
+ws2811_t ws281x;
+
+//    {
+//        .freq = DEFAULT_TARGET_FREQ,
+//        .dmanum = DEFAULT_DMANUM,
+//        .channel =
+//            {
+//                [0] =
+//                    {
+//                        .gpionum = DEFAULT_GPIO_PIN,
+//                        .count = 0,
+//                        .invert = 0,
+//                        .brightness = 255,
+//                        .strip_type = 0,
+//                    },
+//                [1] =
+//                    {
+//                        .gpionum = 0,
+//                        .count = 0,
+//                        .invert = 0,
+//                        .brightness = 0,
+//                    },
+//            },
+//};
 
 /**
  * ws281x.setParam(param:Number, value:Number)
@@ -74,8 +75,8 @@ void setParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  int param = info[0]->Int32Value();
-  int value = info[1]->Int32Value();
+  const int param = info[0]->Int32Value();
+  const int value = info[1]->Int32Value();
 
   switch (param)
   {
@@ -90,8 +91,6 @@ void setParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     Nan::ThrowTypeError("setParam(): invalid parameter-id");
     return;
   }
-
-  info.GetReturnValue.SetUndefined();
 }
 /**
  * ws281x.setChannelParam(channel:Number, param:Number, value:Number)
@@ -113,7 +112,7 @@ void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  int channelNumber = info[0]->Int32Value();
+  const int channelNumber = info[0]->Int32Value();
   if (channelNumber > 1 || channelNumber < 0)
   {
     Nan::ThrowError("setChannelParam(): invalid chanel-number");
@@ -132,34 +131,32 @@ void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  ws2811_channel_t channel = ws281x.channel[channelNumber];
-  int param = info[1]->Int32Value();
-  int value = info[2]->Int32Value();
+  ws2811_channel_t* channel = &ws281x.channel[channelNumber];
+  const int param = info[1]->Int32Value();
+  const int value = info[2]->Int32Value();
 
   switch (param)
   {
   case PARAM_GPIONUM:
-    channel.gpionum = value;
+    channel->gpionum = value;
     break;
   case PARAM_COUNT:
-    channel.count = value;
+    channel->count = value;
     break;
   case PARAM_INVERT:
-    channel.invert = value;
+    channel->invert = value;
     break;
   case PARAM_BRIGHTNESS:
-    channel.brightness = (uint8_t)value;
+    channel->brightness = (uint8_t)value;
     break;
   case PARAM_STRIP_TYPE:
-    channel.strip_type = value;
+    channel->strip_type = value;
     break;
 
   default:
     Nan::ThrowTypeError("setChannelParam(): invalid parameter-id");
     return;
   }
-
-  info.GetReturnValue().SetUndefined();
 }
 
 /**
@@ -205,13 +202,11 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  int numBytes = std::min(
+  const int numBytes = std::min(
       node::Buffer::Length(buffer),
       sizeof(ws2811_led_t) * ws281x.channel[0].count);
 
   memcpy(channel.leds, data, numBytes);
-
-  info.GetReturnValue.SetUndefined();
 }
 
 /**
@@ -229,8 +224,6 @@ void init(const Nan::FunctionCallbackInfo<v8::Value> &info)
     Nan::ThrowError(ws2811_get_return_t_str(ret));
     return;
   }
-
-  info.GetReturnValue.SetUndefined();
 }
 
 /**
@@ -255,8 +248,6 @@ void render(const Nan::FunctionCallbackInfo<v8::Value> &info)
     Nan::ThrowError(ws2811_get_return_t_str(ret));
     return;
   }
-
-  info.GetReturnValue.SetUndefined();
 }
 
 /**
@@ -276,7 +267,6 @@ void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info)
   }
 
   ws2811_fini(&ws281x);
-  info.GetReturnValue.SetUndefined();
 }
 
 /**
@@ -284,6 +274,9 @@ void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info)
  */
 void initialize(Local<Object> exports)
 {
+  ws281x.freq = DEFAULT_TARGET_FREQ;
+  ws281x.dmanum = DEFAULT_DMANUM;
+
   NAN_EXPORT(exports, setParam);
   NAN_EXPORT(exports, setChannelParam);
   NAN_EXPORT(exports, setChannelData);
