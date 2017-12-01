@@ -28,29 +28,6 @@ using namespace v8;
 
 ws2811_t ws281x;
 
-//    {
-//        .freq = DEFAULT_TARGET_FREQ,
-//        .dmanum = DEFAULT_DMANUM,
-//        .channel =
-//            {
-//                [0] =
-//                    {
-//                        .gpionum = DEFAULT_GPIO_PIN,
-//                        .count = 0,
-//                        .invert = 0,
-//                        .brightness = 255,
-//                        .strip_type = 0,
-//                    },
-//                [1] =
-//                    {
-//                        .gpionum = 0,
-//                        .count = 0,
-//                        .invert = 0,
-//                        .brightness = 0,
-//                    },
-//            },
-//};
-
 /**
  * ws281x.setParam(param:Number, value:Number)
  * wrap setting global params in ws2811_t
@@ -206,6 +183,7 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
       node::Buffer::Length(buffer),
       sizeof(ws2811_led_t) * ws281x.channel[0].count);
 
+  // FIXME: handle memcpy-result
   memcpy(channel.leds, data, numBytes);
 }
 
