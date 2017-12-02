@@ -1,11 +1,14 @@
 const ws281x = require('../lib/ws281x-native');
 
 const NUM_LEDS = parseInt(process.argv[2], 10) || 10;
+const STRIP_TYPE = process.argv[3] || "ws2812";
+
+console.log(WS2811_TARGET_FREQ);
 
 const channels = ws281x.init({
-  dma: 10,
+  dma: 5,
   freq: 800000,
-  channels: [{gpio: 18, count: 10, invert: false, stripType: 'ws2812'}]
+  channels: [{gpio: 18, count: NUM_LEDS, invert: false, stripType: STRIP_TYPE}]
 });
 
 const channel = channels[0];
@@ -27,7 +30,7 @@ setInterval(function() {
   }
 
   offset = (offset + 1) % 256;
-  console.log(pixelData);
+  //console.log(pixelData);
   ws281x.render();
 }, 1000 / 30);
 
@@ -49,5 +52,9 @@ function colorwheel(pos) {
 }
 
 function rgb2Int(r, g, b) {
-  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+  return ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+}
+
+function rgbw2Int(r, g, b, w) {
+  return ((w & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
 }
