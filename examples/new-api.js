@@ -3,8 +3,6 @@ const ws281x = require('../lib/ws281x-native');
 const NUM_LEDS = parseInt(process.argv[2], 10) || 10;
 const STRIP_TYPE = process.argv[3] || "ws2812";
 
-console.log(WS2811_TARGET_FREQ);
-
 const channels = ws281x.init({
   dma: 5,
   freq: 800000,
