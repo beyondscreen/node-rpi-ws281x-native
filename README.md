@@ -258,7 +258,7 @@ Edit /etc/modprobe.d/alsa-base.conf and comment out the line
 
     options snd-usb-audio index=-2
 
-As @AdyiPool [pointed out](#49), that file seems to not exist in newer
+As @AdyiPool [pointed out](https://github.com/beyondscreen/node-rpi-ws281x-native/issues/49), that file seems to not exist in newer
 raspbian-versions, Alternatively, you can create a file `/etc/modprobe.d/blacklist-ws281x.conf` with the following contents (effectively preventing sound-related modules to be loaded into the kernel):
 
 ```
