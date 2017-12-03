@@ -258,4 +258,18 @@ Edit /etc/modprobe.d/alsa-base.conf and comment out the line
 
     options snd-usb-audio index=-2
 
+As @AdyiPool [pointed out](#49), that file seems to not exist in newer
+raspbian-versions, Alternatively, you can create a file `/etc/modprobe.d/blacklist-ws281x.conf` with the following contents (effectively preventing sound-related modules to be loaded into the kernel):
+
+```
+blacklist snd_bcm2835
+blacklist snd_pcm
+blacklist snd_timer
+blacklist snd_pcsp
+blacklist snd
+```
+
+(after updating the file you need to run `sudo update-initramfs -u` to
+get the changes into the boot-partition or something like that)
+
 If anyone finds a better solution please get in touch!
