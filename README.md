@@ -34,14 +34,14 @@ See here for more information: https://raspberrypi.stackexchange.com/questions/4
 
 ## Usage Example
 
-This will initialize the driver for 100 LEDs and set all LEDs to the same, pinkish color:
+This is the simplest example that will actually do something.
+It will initialize the driver for 100 LEDs and set all LEDs to the
+same, pinkish color:
 
 ```javascript
 const ws281x = require('rpi-ws281x-native');
 
-const [channel] = ws281x.init({
-  channels: [{count: 100, type: 'ws2812'}]
-});
+const channel = ws281x(100, { stripType: 'ws2812' });
 
 const colorArray = channel.array;
 for (let i = 0; i < channel.count; i++) {
@@ -92,12 +92,12 @@ access to the color-data.
 
 Configures and initializes the drivers and returns an array of channel-interfaces.
 
-#### Full Example:
+#### Example:
 
 ```javascript
 const ws2821x = require('rpi-ws281x-native');
 
-ws281x.init({
+const channels = ws281x.init({
   dma: 10,
   freq: 800000,
   channels: [
