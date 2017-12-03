@@ -2,18 +2,13 @@ const ws281x = require('../lib/ws281x-native');
 
 const NUM_LEDS = parseInt(process.argv[2], 10) || 10;
 
-const channels = ws281x.init({
-  dma: 10,
-  freq: 800000,
-  channels: [{gpio: 18, count: 10, invert: false, stripType: 'ws2812'}]
-});
-
-const channel = channels[0];
-const pixelData = channel.array;
+const channel = ws281x(NUM_LEDS);
 
 // ---- trap the SIGINT and reset before exit
 process.on('SIGINT', function() {
   ws281x.reset();
+  ws281x.finalize();
+
   process.nextTick(function() {
     process.exit(0);
   });
@@ -23,11 +18,10 @@ process.on('SIGINT', function() {
 let offset = 0;
 setInterval(function() {
   for (let i = 0; i < 3 * NUM_LEDS; i++) {
-    pixelData[i] = colorwheel((offset + i) % 256);
+    channel.array[i] = colorwheel((offset + i) % 256);
   }
 
   offset = (offset + 1) % 256;
-  console.log(pixelData);
   ws281x.render();
 }, 1000 / 30);
 

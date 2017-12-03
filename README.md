@@ -1,21 +1,14 @@
 # control ws281x-LEDs with node.js
 
-> if you happen to know C++ and node/iojs/V8, I would really appreciate any help 
-> and feedback on this module.
-> There is certainly lots of room for improvement.
+**NOTE: This will only ever work on the Raspberry Pi.**
 
 This module provides native bindings to the
-[rpi_ws281x](https://github.com/jgarff/rpi_ws281x) library by Jeremy Garff to
-provide a very basic set of functions to write data to a strip of
-ws2811/ws2812 LEDs. **this will only run on the Raspberry Pi.**
+[rpi_ws281x](https://github.com/jgarff/rpi_ws281x) library by Jeremy Garff
+that is used to control strips of individually addressable LEDs directly
+from a raspberry-pi. Supported are all LEDs of the NEOPIXEL/WS281x-family
+(specifically WS2811, WS2812, WS2812b, SK6812, SK6812W in all variations).
 
 ## setup
-
-You will need an up-to-date-version of nodejs (>= 6.5).
-If you are running on a RaspberryPi 1 or zero, you might need to download the binaries manually.
-Head over to https://nodejs.org/dist, find the version to install and download the `-armv61`-version.
-See here for more information: https://raspberrypi.stackexchange.com/questions/48303/install-nodejs-for-all-raspberry-pi
-
 
 this module is available via npm:
 
@@ -27,78 +20,159 @@ if you prefer installing from source:
     git clone --recursive https://github.com/beyondscreen/node-rpi-ws281x-native.git
     cd rpi-ws281x-native
     npm install
-    node-gyp rebuild
 
 
-## basic usage
+## node-version
 
-this module mainly exports four functions to send data to the LED-String.
+You will need an up-to-date version of nodejs that supports at least some es6-features (>= 6.5).
+
+If you are running on a RaspberryPi 1 or zero (running an ARMv61 processor),
+you might need to download and install the nodejs-binaries manually.
+Head over to https://nodejs.org/dist, find the version to install and download the `-armv61`-version.
+
+See here for more information: https://raspberrypi.stackexchange.com/questions/48303/install-nodejs-for-all-raspberry-pi
+
+## Usage Example
+
+This will initialize the driver for 100 LEDs and set all LEDs to the same, pinkish color:
 
 ```javascript
-exports = {
-    /**
-     * configures PWM and DMA for sending data to the LEDs.
-     *
-     * @param {Number} numLeds  number of LEDs to be controlled
-     * @param {?Object} options  (acutally only tested with default-values)
-     *                           intialization-options for the library
-     *                           (PWM frequency, DMA channel, GPIO, Brightness)
-     */
-    init: function(numLeds, options) {},
+const ws281x = require('rpi-ws281x-native');
 
-    /**
-     * register a mapping to manipulate array-indices within the
-     * data-array before rendering.
-     *
-     * @param {Array.<Number>} map  the mapping, indexed by destination.
-     */
-    setIndexMapping: function(map) {},
+const [channel] = ws281x.init({
+  channels: [{count: 100, type: 'ws2812'}]
+});
 
-    /**
-     * set the overall-brightness for the entire strip.
-     * This is a fixed scaling applied by the driver when
-     * data is sent to the strip
-     *
-     * @param {Number} brightness the brightness, value from 0 to 255.
-     */
-    setBrightness: function(brightness) {},
+const colorArray = channel.array;
+for (let i = 0; i < channel.count; i++) {
+  colorsArray[i] = 0xffcc22;
+}
 
-    /**
-     * send data to the LED-strip.
-     *
-     * @param {Uint32Array} data  the pixel-data, 24bit per pixel in
-     *                            RGB-format (0xff0000 is red).
-     */
-    render: function(data) {},
-
-    /**
-     * clears all LEDs, resets the PWM and DMA-parts and deallocates
-     * all internal structures.
-     */
-    reset: function() {}
-};
+ws281x.render();
 ```
 
-### Index-Mapping
 
-As the wiring of the LEDs not neccessarily corresponds to the pixel-ordering in
-the data-array, this module supports index-remapping. So, if you are building a
-grid of LEDs you can just use an alternating, top-to-bottom or mirrored wiring
-and use the remapping in order to use a unified structure in the incoming
-data-arrays.
+## API
 
-### Events
+### `ws281x(numLeds: number, options = {}): Channel`
 
-In addition to that, the exported object is an `EventEmitter` that will emit
-the following Events:
+For simple setups (i.e. those using just one channel), there is an easy
+way for initialization using the top-level export function.
 
- * `beforeRender`: emitted just before the data is prepared and sent to the
-   LED-driver. The handler will receive the pixel-data array (an `Uint32Array`)
-   as single argument. As this event is handled synchronously, you can use this
-   to manipulate the data before it is sent to the LED-Strip.
- * `render`: emitted after the data has been sent to the LED-Strip. The single
-   argument passed to the handler is the final pixel-data array, after
-   index-remapping and gamma-correction.
+#### Example:
+
+```javascript
+const ws2821x = require('rpi-ws281x-native');
+const options = {
+  dma: 10,
+  freq: 800000,
+  gpio: 18,
+  invert: false,
+  brightness: 255,
+  stripType: ws281x.stripType.WS2812
+};
+
+const channel = ws281x(20, options);
+const colors = channel.array;
+
+// update color-values
+colors[42] = 0xffcc22;
+ws281x.render();
+```
+
+This function takes two parameters, the number of LEDs (`numLeds`) and an `options`-object
+which is entirely optional. These options combine the channel-options and
+the global option from the init-function as described below.
+
+The returned object is a channel object (also described below) that gives
+access to the color-data.
+
+
+### `ws281x.init(options: Object): Channel[]`
+
+Configures and initializes the drivers and returns an array of channel-interfaces.
+
+#### Full Example:
+
+```javascript
+const ws2821x = require('rpi-ws281x-native');
+
+ws281x.init({
+  dma: 10,
+  freq: 800000,
+  channels: [
+    {count: 20, gpio: 18, invert: false, brightness: 255, stripType: 'ws2812'},
+    {count: 20, gpio: 13, invert: false, brightness: 128, stripType: 'sk6812-rgbw'}
+  ]
+});
+```
+
+The only parameter `options` is an object with the following properties (unspecified properties will use the default-value):
+
+ - `dma: number`: the dma-number to use for the driver's data-transport to the LEDs (default: `10`)
+
+ - `freq: number`: the frequency in Hz of the control-signal. This is 800kHz for ws2812/sk6812 LEDs and 400kHz for older ws2811 LEDs (default `800000`).
+
+ - `channels: Object[]`: an array of one or two objects with channel-specific
+   configuration for the two possible outputs:
+
+    - `count: number`: the number of LEDs on this channel.
+    - `gpio: number`: the GPIO port-number the strip is connected to. (default: `18` for the first channel and `12` for the second channel)
+    - `invert: boolean`: whether the output-signal should be inverted (needed when a inverting level-shifter is used) (default: `false`)
+    - `brightness: number`: the brightness, applied to all LEDs on this channel. Value between 0 and 255 (default: `255`).
+    - `stripType: string|number`: the LED-type connected on this channel. See `./lib/constants.js`. Can be a string-constant or one of the values from `ws281x.stripType` (default `ws281x.stripType.WS2812`)
+
+
+### `ws281x.render()`
+
+Send the current state of the channel color-buffers to the LEDs.
+
+#### Example:
+
+```javascript
+const ws2821x = require('rpi-ws281x-native');
+
+// initialize
+const [channel] = ws281x.init(options);
+
+// set some color-values
+channel.array[12] = 0xff0000;
+
+// render
+ws281x.render();
+```
+
+
+### `ws281x.reset()`
+
+Clear all color-values and render.
+
+### `ws281x.finalize()`
+
+Shut down the drivers and free all resources.
+
+
+### `Channel`
+
+Each of the channels is represented by a channel-object.
+Channels do not contain any public methods – all interaction happens through the following properties:
+
+ - `[readonly] count: number`: number of LEDs on this channel
+ - `[readonly] stripType: number`: the numeric LED-type (see `ws281x.stripType`)
+ - `[readonly] invert: boolean`: if the signal for the LEDs is inverted
+ - `[readonly] gpio: number`: the GPIO port-number used
+ - `brightness: number`: the current brightness. Setting this property will
+   have an effect with the very next `render()`-call.
+ - `array: Uint32Array`: the color-data, represented as a Uint32Array.
+   Each index in this array represents the color-value of an LED in 32
+   bits (8 bit each for white, red, green, blue, counting from MSB to LSB).
+   So the numbers can be specified in hex using `0xwwrrggbb`-format.
+   For RGB-LEDs (those without a seperate white-channel) the MSB is ignored.
+ - `buffer: Buffer`: A node-buffer, providing an alternative way to manipulate
+   the color-data. This is a view on the same array-buffer that is used by the
+   Uint32Array. When using the buffer, make sure to check for endianness to
+   prevent problems (I believe it is little endian on the raspebrry-pi).
+
 
 
 ## testing basic functionality
@@ -132,15 +206,18 @@ There is a guide [over at adafruit.com](https://learn.adafruit.com/neopixels-on-
 on how to get the hardware up and running. I followed these instructions by
 the word and had a working LED-strip.
 
-Essentially, you need the Raspberry Pi, a logic-level converter to shift the
-output-voltage of the GPIO from 3.3V up to 5V (the guide mentions the 74AHCT125,
-mine is an 74HCT125N which works just as well) and of course a LED-Strip or
-other types of WS2812-LEDs.
+Essentially, you need the Raspberry Pi, a logic-level converter and of
+course a LED-Strip or other types of WS281x/SK6812-LEDs.
+
+The logic-level shifter is required to shift the output-voltage of the
+GPIO from 3.3V up to 5V. The adafruit-guide mentions
+the 74AHCT125, but in fact most of the 74HCT-series chips or even a simple
+transistor can be used for this.
 
 To connect all that together, I'd recommend buying a small breadboard and some
 jumper-wires. Also, consider buying a 5V power-supply that can deliver up to
 60mA per LED (so you'll need up to 6A (30W) to fully power 100 LEDs).
-For smaller applications, a decent USB-charger should do.
+For smaller applications, a good USB-charger should do the job just fine.
 
 ### Buying stuff
 
@@ -160,10 +237,15 @@ You can buy everything at [adafruit.com](https://adafruit.com),
 [sparkfun](https://sparkfun.com), on ebay or your favourite electronics
 retailer (germany: check [conrad electronic](http://www.conrad.de),
 [watterott](http://watterott.com) or [reichelt](http://reichelt.de) where
-i bought most of my stuff).
+I bought most of my stuff). If you got more time than money to spend, I
+recommend buying directly from chinese manufacturers (via aliexpress
+for example). Shipping takes ages, but you end up paying only half as
+much for the LEDs for example.
 
 
 ## Known Issues
+
+### Raspberry integrated soundcard
 
 There is a conflict where the internal soundcard uses the same 
 GPIO / DMA / PWM functions that are needed to run the LED-drivers. 
