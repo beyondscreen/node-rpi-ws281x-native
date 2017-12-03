@@ -1,8 +1,9 @@
 const ws281x = require('../lib/ws281x-native');
 
 const NUM_LEDS = parseInt(process.argv[2], 10) || 10;
+const STRIP_TYPE = process.argv[3] || 'ws2812';
 
-const channel = ws281x(NUM_LEDS);
+const channel = ws281x(NUM_LEDS, {stripType: STRIP_TYPE});
 
 // ---- trap the SIGINT and reset before exit
 process.on('SIGINT', function() {
@@ -43,5 +44,11 @@ function colorwheel(pos) {
 }
 
 function rgb2Int(r, g, b) {
-  return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+  return ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+}
+
+function rgbw2Int(r, g, b, w) {
+  return (
+    ((w & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)
+  );
 }
