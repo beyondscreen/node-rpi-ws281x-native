@@ -163,11 +163,8 @@ There is a conflict where the internal soundcard uses the same
 GPIO / DMA / PWM functions that are needed to run the LED-drivers. 
 As far as I know you can not use both at the same time.
 
-One workaround is to use an external (USB) soundcard and make it the 
-default device:
+To disable audio, comment out the following line in config.txt contained on the boot partion.
 
-Edit /etc/modprobe.d/alsa-base.conf and comment out the line 
+#dtparam=audio=on
 
-    options snd-usb-audio index=-2
-
-If anyone finds a better solution please get in touch!
+Default is off.
