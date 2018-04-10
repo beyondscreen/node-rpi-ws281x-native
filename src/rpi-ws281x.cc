@@ -16,7 +16,7 @@ using namespace v8;
 
 #define DEFAULT_TARGET_FREQ 800000
 #define DEFAULT_GPIO_PIN 18
-#define DEFAULT_DMANUM 5
+#define DEFAULT_DMANUM 10
 
 #define PARAM_FREQ 1
 #define PARAM_DMANUM 2
