@@ -16,7 +16,8 @@ using namespace v8;
 
 #define DEFAULT_TARGET_FREQ     800000
 #define DEFAULT_GPIO_PIN        18
-#define DEFAULT_DMANUM          5
+#define DEFAULT_DMANUM          10
+#define DEFAULT_STRIP_TYPE      WS2811_STRIP_GRB
 
 ws2811_t ledstring;
 ws2811_channel_t
@@ -66,6 +67,7 @@ void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
   channel0data.invert = 0;
   channel0data.count = 0;
   channel0data.brightness = 255;
+  channel0data.strip_type = DEFAULT_STRIP_TYPE;
 
   channel1data.gpionum = 0;
   channel1data.invert = 0;
@@ -95,7 +97,8 @@ void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
         symDmaNum = Nan::New<String>("dmaNum").ToLocalChecked(),
         symGpioPin = Nan::New<String>("gpioPin").ToLocalChecked(),
         symInvert = Nan::New<String>("invert").ToLocalChecked(),
-        symBrightness = Nan::New<String>("brightness").ToLocalChecked();
+        symBrightness = Nan::New<String>("brightness").ToLocalChecked(),
+        symStripType = Nan::New<String>("stripType").ToLocalChecked();
 
     if(config->HasOwnProperty(symFreq)) {
       ledstring.freq = config->Get(symFreq)->Uint32Value();
@@ -115,6 +118,10 @@ void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 
     if(config->HasOwnProperty(symBrightness)) {
       ledstring.channel[0].brightness = config->Get(symBrightness)->Int32Value();
+    }
+
+    if(config->HasOwnProperty(symStripType)) {
+      ledstring.channel[0].strip_type = config->Get(symStripType)->Int32Value();
     }
   }
 
