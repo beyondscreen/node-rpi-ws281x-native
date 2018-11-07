@@ -114,7 +114,7 @@ the following Events:
 ## testing basic functionality
 
 connect the WS2812-strip to the raspberry-pi as described
-[here](https://learn.adafruit.com/neopixels-on-raspberry-pi/wiring) and run
+[here](https://learn.adafruit.com/neopixels-on-raspberry-pi/raspberry-pi-wiring) and run
 the command `sudo node examples/rainbow.js <numLeds>`.
 You should now see some rainbow-colors animation on the LED-strip.
 
