@@ -30,7 +30,7 @@
   "dependencies": {
     "bindings": "^1.3.0",
     "nan": "^2.8.0",
-    "rpi-version": "^1.4.0"
+    "rpi-version": "git+https://git@github.com/riccardolardi/rpi-version.git#addition-a52082"
   },
   "devDependencies": {
   }
