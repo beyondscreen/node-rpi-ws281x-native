@@ -1,3 +1,3 @@
 [submodule "src/rpi_ws281x"]
     path = src/rpi_ws281x
-    url = https://github.com/beyondscreen/rpi_ws281x.git
+    url = https://github.com/ckirmse/rpi_ws281x.git

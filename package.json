@@ -22,7 +22,7 @@
   "bugs": "https://github.com/beyondscreen/node-rpi-ws281x-native/issues",
   "license": "MIT",
   "dependencies": {
-    "nan": "^2.0.9"
+    "node-addon-api": "^3.0.0"
   },
   "devDependencies": {}
 }
