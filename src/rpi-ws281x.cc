@@ -17,6 +17,22 @@ Napi::Value init(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
+    ledstring.freq = DEFAULT_TARGET_FREQ;
+    ledstring.dmanum  = DEFAULT_DMANUM;
+
+    channel0data.gpionum = DEFAULT_GPIO_PIN;
+    channel0data.invert = 0;
+    channel0data.count = 0;
+    channel0data.brightness = 255;
+
+    channel1data.gpionum = 0;
+    channel1data.invert = 0;
+    channel1data.count = 0;
+    channel1data.brightness = 255;
+
+    ledstring.channel[0] = channel0data;
+    ledstring.channel[1] = channel1data;
+
     if (info.Length() != 1 && info.Length() != 2) {
         std::string err = "Wrong number of arguments " + info.Length();
         Napi::TypeError::New(env, err.c_str()).ThrowAsJavaScriptException();
@@ -27,7 +43,8 @@ Napi::Value init(const Napi::CallbackInfo& info) {
         Napi::TypeError::New(env, "Wrong type number of leds").ThrowAsJavaScriptException();
         return env.Null();
     }
-    int32_t count = info[0].As<Napi::Number>().Int32Value();
+
+    ledstring.channel[0].count = info[0].As<Napi::Number>().Int32Value();
 
     // second (optional) an Object
     if (info.Length() == 2 && info[1].IsObject()) {
@@ -53,24 +70,6 @@ Napi::Value init(const Napi::CallbackInfo& info) {
             ledstring.channel[0].brightness = config.Get("brightness").As<Napi::Number>().Int32Value();
         }
     }
-
-    ledstring.freq = DEFAULT_TARGET_FREQ;
-    ledstring.dmanum  = DEFAULT_DMANUM;
-
-    channel0data.gpionum = DEFAULT_GPIO_PIN;
-    channel0data.invert = 0;
-    channel0data.count = 0;
-    channel0data.brightness = 255;
-
-    channel1data.gpionum = 0;
-    channel1data.invert = 0;
-    channel1data.count = 0;
-    channel1data.brightness = 255;
-
-    ledstring.channel[0] = channel0data;
-    ledstring.channel[1] = channel1data;
-
-    ledstring.channel[0].count = count;
 
     ws2811_return_t err = ws2811_init(&ledstring);
 
