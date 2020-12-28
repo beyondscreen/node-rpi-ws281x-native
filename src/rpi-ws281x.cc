@@ -52,8 +52,8 @@ void setParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  const int param = info[0]->Int32Value();
-  const int value = info[1]->Int32Value();
+  const int param = Nan::To<int32_t>(info[0]).FromJust();
+  const int value = Nan::To<int32_t>(info[1]).FromJust();
 
   switch (param)
   {
@@ -89,7 +89,7 @@ void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  const int channelNumber = info[0]->Int32Value();
+  const int channelNumber = Nan::To<int32_t>(info[0]).FromJust();
   if (channelNumber > 1 || channelNumber < 0)
   {
     Nan::ThrowError("setChannelParam(): invalid chanel-number");
@@ -109,8 +109,8 @@ void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info)
   }
 
   ws2811_channel_t* channel = &ws281x.channel[channelNumber];
-  const int param = info[1]->Int32Value();
-  const int value = info[2]->Int32Value();
+  const int param = Nan::To<int32_t>(info[1]).FromJust();
+  const int value = Nan::To<int32_t>(info[2]).FromJust();
 
   switch (param)
   {
@@ -156,7 +156,7 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
     return;
   }
 
-  int channelNumber = info[0]->Int32Value();
+  int channelNumber = Nan::To<int32_t>(info[0]).FromJust();
   if (channelNumber > 1 || channelNumber < 0)
   {
     Nan::ThrowError("setChannelData(): invalid chanel-number");
@@ -170,7 +170,8 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info)
     Nan::ThrowTypeError("setChannelData(): expected argument 2 to be a Buffer");
     return;
   }
-  Local<Object> buffer = info[1]->ToObject();
+  v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+  auto buffer = info[1]->ToObject(context).ToLocalChecked();
   uint32_t *data = (uint32_t *)node::Buffer::Data(buffer);
 
   if (channel.count == 0 || channel.leds == NULL)

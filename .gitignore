@@ -2,5 +2,6 @@ build
 *.log
 *.iml
 .idea
+package-lock.json
 node_modules
 /lib/binding/rpi_ws281x.node
