@@ -8,7 +8,7 @@ extern "C" {
 
 #define DEFAULT_TARGET_FREQ     800000
 #define DEFAULT_GPIO_PIN        18
-#define DEFAULT_DMANUM          5
+#define DEFAULT_DMANUM          10
 
 ws2811_t ledstring;
 ws2811_channel_t channel0data, channel1data;
