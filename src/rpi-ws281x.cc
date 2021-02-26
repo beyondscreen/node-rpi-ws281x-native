@@ -69,6 +69,10 @@ Napi::Value init(const Napi::CallbackInfo& info) {
         if (config.Has("brightness")) {
             ledstring.channel[0].brightness = config.Get("brightness").As<Napi::Number>().Int32Value();
         }
+
+        if (config.Has("strip_type")) {
+            ledstring.channel[0].strip_type = config.Get("strip_type").As<Napi::Number>().Int32Value();
+        }
     }
 
     ws2811_return_t err = ws2811_init(&ledstring);
