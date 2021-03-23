@@ -166,7 +166,7 @@ void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info) {
   }
 
   const int numBytes = std::min(node::Buffer::Length(buffer),
-                                sizeof(ws2811_led_t) * ws281x.channel[0].count);
+                                sizeof(ws2811_led_t) * channel.count);
 
   // FIXME: handle memcpy-result
   memcpy(channel.leds, data, numBytes);
