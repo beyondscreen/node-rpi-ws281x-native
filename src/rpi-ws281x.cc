@@ -1,152 +1,243 @@
+#include <nan.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <v8.h>
 
 #include "napi.h"
 
 extern "C" {
-  #include "rpi_ws281x/ws2811.h"
+#include "rpi_ws281x/ws2811.h"
 }
 
-#define DEFAULT_TARGET_FREQ     800000
-#define DEFAULT_GPIO_PIN        18
-#define DEFAULT_DMANUM          10
+using namespace v8;
 
-ws2811_t ledstring;
-ws2811_channel_t channel0data, channel1data;
+#define DEFAULT_TARGET_FREQ 800000
+#define DEFAULT_GPIO_PIN 18
+#define DEFAULT_DMANUM 10
 
-Napi::Value init(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+#define PARAM_FREQ 1
+#define PARAM_DMANUM 2
+#define PARAM_GPIONUM 3
+#define PARAM_COUNT 4
+#define PARAM_INVERT 5
+#define PARAM_BRIGHTNESS 6
+#define PARAM_STRIP_TYPE 7
 
-    ledstring.freq = DEFAULT_TARGET_FREQ;
-    ledstring.dmanum  = DEFAULT_DMANUM;
+ws2811_t ws281x;
 
-    channel0data.gpionum = DEFAULT_GPIO_PIN;
-    channel0data.invert = 0;
-    channel0data.count = 0;
-    channel0data.brightness = 255;
+/**
+ * ws281x.setParam(param:Number, value:Number)
+ * wrap setting global params in ws2811_t
+ */
+void setParam(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  if (info.Length() != 2) {
+    Nan::ThrowTypeError("setParam(): expected two params");
+    return;
+  }
 
-    channel1data.gpionum = 0;
-    channel1data.invert = 0;
-    channel1data.count = 0;
-    channel1data.brightness = 255;
+  if (!info[0]->IsNumber()) {
+    Nan::ThrowTypeError(
+        "setParam(): expected argument 1 to be the parameter-id");
+    return;
+  }
 
-    ledstring.channel[0] = channel0data;
-    ledstring.channel[1] = channel1data;
+  if (!info[1]->IsNumber()) {
+    Nan::ThrowTypeError("setParam(): expected argument 2 to be the value");
+    return;
+  }
 
-    if (info.Length() != 1 && info.Length() != 2) {
-        std::string err = "Wrong number of arguments " + info.Length();
-        Napi::TypeError::New(env, err.c_str()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
+  const int param = Nan::To<int32_t>(info[0]).FromJust();
+  const int value = Nan::To<int32_t>(info[1]).FromJust();
 
-    if (!info[0].IsNumber()) {
-        Napi::TypeError::New(env, "Wrong type number of leds").ThrowAsJavaScriptException();
-        return env.Null();
-    }
+  switch (param) {
+    case PARAM_FREQ:
+      ws281x.freq = value;
+      break;
+    case PARAM_DMANUM:
+      ws281x.dmanum = value;
+      break;
 
-    ledstring.channel[0].count = info[0].As<Napi::Number>().Int32Value();
+    default:
+      Nan::ThrowTypeError("setParam(): invalid parameter-id");
+      return;
+  }
+}
+/**
+ * ws281x.setChannelParam(channel:Number, param:Number, value:Number)
+ *
+ * wrap setting params in ws2811_channel_t
+ */
+void setChannelParam(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  if (info.Length() != 3) {
+    Nan::ThrowTypeError("setChannelParam(): missing argument");
+    return;
+  }
 
-    // second (optional) an Object
-    if (info.Length() == 2 && info[1].IsObject()) {
-        Napi::Object config = info[1].As<Napi::Object>();
+  // retrieve channelNumber from argument 1
+  if (!info[0]->IsNumber()) {
+    Nan::ThrowTypeError(
+        "setChannelParam(): expected argument 1 to be the channel-number");
+    return;
+  }
 
-        if (config.Has("frequency")) {
-            ledstring.freq = config.Get("frequency").As<Napi::Number>().Int32Value();
-        }
+  const int channelNumber = Nan::To<int32_t>(info[0]).FromJust();
+  if (channelNumber > 1 || channelNumber < 0) {
+    Nan::ThrowError("setChannelParam(): invalid chanel-number");
+    return;
+  }
 
-        if (config.Has("dmaNum")) {
-            ledstring.dmanum = config.Get("dmaNum").As<Napi::Number>().Int32Value();
-        }
+  if (!info[1]->IsNumber()) {
+    Nan::ThrowTypeError(
+        "setChannelParam(): expected argument 2 to be the parameter-id");
+    return;
+  }
 
-        if (config.Has("gpioPin")) {
-            ledstring.channel[0].gpionum = config.Get("gpioPin").As<Napi::Number>().Int32Value();
-        }
+  if (!info[2]->IsNumber() && !info[2]->IsBoolean()) {
+    Nan::ThrowTypeError(
+        "setChannelParam(): expected argument 3 to be the value");
+    return;
+  }
 
-        if (config.Has("invert")) {
-            ledstring.channel[0].invert = config.Get("invert").As<Napi::Number>().Int32Value();
-        }
+  ws2811_channel_t *channel = &ws281x.channel[channelNumber];
+  const int param = Nan::To<int32_t>(info[1]).FromJust();
+  const int value = Nan::To<int32_t>(info[2]).FromJust();
 
-        if (config.Has("brightness")) {
-            ledstring.channel[0].brightness = config.Get("brightness").As<Napi::Number>().Int32Value();
-        }
+  switch (param) {
+    case PARAM_GPIONUM:
+      channel->gpionum = value;
+      break;
+    case PARAM_COUNT:
+      channel->count = value;
+      break;
+    case PARAM_INVERT:
+      channel->invert = value;
+      break;
+    case PARAM_BRIGHTNESS:
+      channel->brightness = (uint8_t)value;
+      break;
+    case PARAM_STRIP_TYPE:
+      channel->strip_type = value;
+      break;
 
-        if (config.Has("strip_type")) {
-            ledstring.channel[0].strip_type = config.Get("strip_type").As<Napi::Number>().Int32Value();
-        }
-    }
-
-    ws2811_return_t err = ws2811_init(&ledstring);
-
-    if (err) {
-        printf("error initializing %i %s\n", err, ws2811_get_return_t_str(err));
-        Napi::TypeError::New(env, "Init Error").ThrowAsJavaScriptException();
-    }
-
-    return env.Null();
+    default:
+      Nan::ThrowTypeError("setChannelParam(): invalid parameter-id");
+      return;
+  }
 }
 
-Napi::Value setBrightness(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+/**
+ * ws281x.setChannelData(channel:Number, buffer:Buffer)
+ *
+ * wrap copying data to ws2811_channel_t.leds
+ */
+void setChannelData(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  if (info.Length() != 2) {
+    Nan::ThrowTypeError("setChannelData(): missing argument.");
+    return;
+  }
 
-    if (info.Length() != 1) {
-        std::string err = "Wrong number of arguments " + info.Length();
-        Napi::TypeError::New(env, err.c_str()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
+  // retrieve channelNumber from argument 1
+  if (!info[0]->IsNumber()) {
+    Nan::ThrowTypeError(
+        "setChannelData(): expected argument 1 to be the channel-number.");
+    return;
+  }
 
-    if (!info[0].IsNumber()) {
-        Napi::TypeError::New(env, "Wrong type argument 0").ThrowAsJavaScriptException();
-        return env.Null();
-    }
-    int32_t brightness = info[0].As<Napi::Number>().Int32Value();
+  int channelNumber = Nan::To<int32_t>(info[0]).FromJust();
+  if (channelNumber > 1 || channelNumber < 0) {
+    Nan::ThrowError("setChannelData(): invalid chanel-number");
+    return;
+  }
+  ws2811_channel_t channel = ws281x.channel[channelNumber];
 
-    ledstring.channel[0].brightness = brightness;
+  // retrieve buffer from argument 2
+  if (!node::Buffer::HasInstance(info[1])) {
+    Nan::ThrowTypeError("setChannelData(): expected argument 2 to be a Buffer");
+    return;
+  }
+  v8::Local<v8::Context> context = info.GetIsolate()->GetCurrentContext();
+  auto buffer = info[1]->ToObject(context).ToLocalChecked();
+  uint32_t *data = (uint32_t *)node::Buffer::Data(buffer);
 
-    return env.Null();
+  if (channel.count == 0 || channel.leds == NULL) {
+    Nan::ThrowError("setChannelData(): channel not ready");
+    return;
+  }
+
+  const int numBytes = std::min(node::Buffer::Length(buffer),
+                                sizeof(ws2811_led_t) * channel.count);
+
+  // FIXME: handle memcpy-result
+  memcpy(channel.leds, data, numBytes);
 }
 
-Napi::Value reset(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+/**
+ * ws281x.init()
+ *
+ * wrap ws2811_init()
+ */
+void init(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  ws2811_return_t ret;
 
-    memset(ledstring.channel[0].leds, 0, sizeof(*ledstring.channel[0].leds) * ledstring.channel[0].count);
-
-    ws2811_render(&ledstring);
-    ws2811_wait(&ledstring);
-    ws2811_fini(&ledstring);
-
-    return env.Null();
+  ret = ws2811_init(&ws281x);
+  if (ret != WS2811_SUCCESS) {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
+  }
 }
 
-Napi::Value render(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
+/**
+ * ws281x.render()
+ *
+ * wrap ws2811_wait() and ws2811_render()
+ */
+void render(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  ws2811_return_t ret;
 
-    if (info.Length() != 1) {
-        std::string err = "Wrong number of arguments " + info.Length();
-        Napi::TypeError::New(env, err.c_str()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
+  ret = ws2811_wait(&ws281x);
+  if (ret != WS2811_SUCCESS) {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
+  }
 
-    if (!info[0].IsTypedArray()) {
-        Napi::TypeError::New(env, "Wrong type argument 0").ThrowAsJavaScriptException();
-        return env.Null();
-    }
+  ret = ws2811_render(&ws281x);
+  if (ret != WS2811_SUCCESS) {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
+  }
+}
 
-    Napi::Uint32Array values = info[0].As<Napi::Uint32Array>();
+/**
+ * ws281x.finalize()
+ *
+ * wrap ws2811_wait() and ws2811_fini()
+ */
+void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  ws2811_return_t ret;
 
-    if (values.ByteLength() < sizeof(*ledstring.channel[0].leds) * ledstring.channel[0].count) {
-        Napi::TypeError::New(env, "Wrong length").ThrowAsJavaScriptException();
-        return env.Null();
-    }
+  ret = ws2811_wait(&ws281x);
+  if (ret != WS2811_SUCCESS) {
+    Nan::ThrowError(ws2811_get_return_t_str(ret));
+    return;
+  }
 
-    memcpy(ledstring.channel[0].leds, values.Data(), sizeof(*ledstring.channel[0].leds) * ledstring.channel[0].count);
+  ws2811_fini(&ws281x);
+}
 
-    ws2811_wait(&ledstring);
-    ws2811_render(&ledstring);
+/**
+ * initializes the module.
+ */
+void initialize(Local<Object> exports) {
+  ws281x.freq = DEFAULT_TARGET_FREQ;
+  ws281x.dmanum = DEFAULT_DMANUM;
 
-    return env.Null();
+  NAN_EXPORT(exports, setParam);
+  NAN_EXPORT(exports, setChannelParam);
+  NAN_EXPORT(exports, setChannelData);
+  NAN_EXPORT(exports, init);
+  NAN_EXPORT(exports, render);
+  NAN_EXPORT(exports, finalize);
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
@@ -158,4 +249,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     return exports;
 }
 
-NODE_API_MODULE(wrapper, Init)
+// vi: ts=2 sw=2 expandtab
