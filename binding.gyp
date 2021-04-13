@@ -7,7 +7,7 @@
           'target_name': 'rpi_ws281x',
           'sources': ['./src/rpi-ws281x.cc'],
           'dependencies': ['rpi_libws2811'],
-          'include_dirs': ["<!@(node -p \"require('node-addon-api').include\")"],
+          'include_dirs': ["<!(node -e \"require('nan')\")"],
           'defines': ['NAPI_DISABLE_CPP_EXCEPTIONS'],
         },
 
