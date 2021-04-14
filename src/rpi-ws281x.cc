@@ -4,8 +4,6 @@
 #include <string.h>
 #include <v8.h>
 
-#include "napi.h"
-
 extern "C" {
 #include "rpi_ws281x/ws2811.h"
 }
@@ -225,28 +223,23 @@ void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info) {
   ws2811_fini(&ws281x);
 }
 
-/**
- * initializes the module.
- */
-void initialize(Local<Object> exports) {
-  ws281x.freq = DEFAULT_TARGET_FREQ;
-  ws281x.dmanum = DEFAULT_DMANUM;
+NAN_MODULE_INIT(InitAll) {
+  Set(target, New<String>("init").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(init)).ToLocalChecked());
 
-  NAN_EXPORT(exports, setParam);
-  NAN_EXPORT(exports, setChannelParam);
-  NAN_EXPORT(exports, setChannelData);
-  NAN_EXPORT(exports, init);
-  NAN_EXPORT(exports, render);
-  NAN_EXPORT(exports, finalize);
+  Set(target, New<String>("setBrightness").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(setBrightness)).ToLocalChecked());
+
+  Set(target, New<String>("reset").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(reset)).ToLocalChecked());
+
+  Set(target, New<String>("render").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(render)).ToLocalChecked());
+
+  Set(target, New<String>("finalize").ToLocalChecked(),
+    GetFunction(New<FunctionTemplate>(finalize)).ToLocalChecked());
 }
 
-Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    exports.Set(Napi::String::New(env, "init"), Napi::Function::New(env, init));
-    exports.Set(Napi::String::New(env, "setBrightness"), Napi::Function::New(env, setBrightness));
-    exports.Set(Napi::String::New(env, "reset"), Napi::Function::New(env, reset));
-    exports.Set(Napi::String::New(env, "render"), Napi::Function::New(env, render));
-
-    return exports;
-}
+NODE_MODULE(addon, InitAll)
 
 // vi: ts=2 sw=2 expandtab
