@@ -9,6 +9,7 @@ extern "C" {
 }
 
 using namespace v8;
+using v8::FunctionTemplate;
 
 #define DEFAULT_TARGET_FREQ 800000
 #define DEFAULT_GPIO_PIN 18
@@ -224,20 +225,20 @@ void finalize(const Nan::FunctionCallbackInfo<v8::Value> &info) {
 }
 
 NAN_MODULE_INIT(InitAll) {
-  Set(target, New<String>("init").ToLocalChecked(),
-    GetFunction(New<FunctionTemplate>(init)).ToLocalChecked());
+  Nan::Set(target, Nan::New<String>("init").ToLocalChecked(),
+    GetFunction(Nan::New<FunctionTemplate>(init)).ToLocalChecked());
 
-  Set(target, New<String>("setBrightness").ToLocalChecked(),
-    GetFunction(New<FunctionTemplate>(setBrightness)).ToLocalChecked());
+  Nan::Set(target, Nan::New<String>("setBrightness").ToLocalChecked(),
+    GetFunction(Nan::New<FunctionTemplate>(setBrightness)).ToLocalChecked());
 
-  Set(target, New<String>("reset").ToLocalChecked(),
-    GetFunction(New<FunctionTemplate>(reset)).ToLocalChecked());
+  Nan::Set(target, Nan::New<String>("reset").ToLocalChecked(),
+    GetFunction(Nan::New<FunctionTemplate>(reset)).ToLocalChecked());
 
-  Set(target, New<String>("render").ToLocalChecked(),
-    GetFunction(New<FunctionTemplate>(render)).ToLocalChecked());
+  Nan::Set(target, Nan::New<String>("render").ToLocalChecked(),
+    GetFunction(Nan::New<FunctionTemplate>(render)).ToLocalChecked());
 
-  Set(target, New<String>("finalize").ToLocalChecked(),
-    GetFunction(New<FunctionTemplate>(finalize)).ToLocalChecked());
+  Nan::Set(target, Nan::New<String>("finalize").ToLocalChecked(),
+    GetFunction(Nan::New<FunctionTemplate>(finalize)).ToLocalChecked());
 }
 
 NODE_MODULE(addon, InitAll)
