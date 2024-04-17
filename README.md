@@ -62,7 +62,7 @@ way for initialization using the top-level export function.
 #### Example:
 
 ```javascript
-const ws2821x = require('rpi-ws281x-native');
+const ws281x = require('rpi-ws281x-native');
 const options = {
   dma: 10,
   freq: 800000,
